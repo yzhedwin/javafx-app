@@ -3,7 +3,6 @@ package com.demo.mmi;
 import java.time.ZonedDateTime;
 
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.boot.builder.SpringApplicationBuilder;
 import org.springframework.context.ConfigurableApplicationContext;
@@ -22,7 +21,6 @@ public class GanttChartMain extends Application {
 	private ConfigurableApplicationContext context;
 
 	@Autowired
-	@Qualifier("restAPIGateway")
 	private RestAPIGateway restAPIGateway;
 
 	@Override
