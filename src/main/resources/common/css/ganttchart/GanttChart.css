@@ -1,0 +1,88 @@
+/* Summary */
+/* TODO - Need to use Colours.css */
+* {
+	-base-colour: #121212;
+	-content-colour: #2c2c2c;
+	-content-colour-hover: #3d3d3d;
+	-interactable-colour: #393939;
+	-interactable-colour-hover: #474747;
+	-interactable-colour-pressed: #393939;
+	-focus-colour: #00dcff;
+	-text-colour: #ffffff;
+}
+
+/* Base */
+.gantt-chart {
+	-fx-background-color: -base-colour;
+}
+
+.gantt-chart > .split-pane-divider {
+	-fx-background-color: -content-colour;
+}
+
+.gantt-chart > .split-pane-divider:hover {
+	-fx-background-color: -content-colour-hover;
+}
+
+
+/* Task Group List */
+.task-group-list-information {
+	-fx-background-color: -base-colour;
+}
+
+.task-group-list-data {
+	-fx-background-color: -content-colour;
+	-fx-background-insets: 0.1em;
+	-fx-padding: 0 0.5em 0 0.5em;
+}
+
+
+/* Timeline */
+.timeline {
+	-fx-background-color: -content-colour;
+}
+
+.timeline:hover {
+	-fx-background-color: -content-colour-hover;
+}
+
+
+/* Guider */
+.guider {
+	-fx-background-color: -base-colour;
+}
+
+.guider-line {
+	-fx-background-color: -focus-colour;
+}
+
+.guider-button {
+	-fx-background-color: -focus-colour;
+}
+
+.guider-track {
+	-fx-background-color: -interactable-colour;
+}
+
+.guider-track:hover {
+	-fx-background-color: -interactable-colour-hover;
+}
+
+
+/* Task List */
+.task-list {
+	-fx-background-color: -content-colour;
+}
+
+
+/* Row Indicator */
+.row-indicator {
+	-fx-background-color: transparent;
+	-fx-border-insets: 0.1em;
+	-fx-border-width: 0.1em;
+	-fx-border-color: -focus-colour;
+}
+
+.label {
+	-fx-text-fill: -text-colour;
+}
