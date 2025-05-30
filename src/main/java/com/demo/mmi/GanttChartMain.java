@@ -2,21 +2,28 @@ package com.demo.mmi;
 
 import java.time.ZonedDateTime;
 
-import org.springframework.boot.SpringApplication;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
+import org.springframework.boot.builder.SpringApplicationBuilder;
 import org.springframework.context.ConfigurableApplicationContext;
 
 import com.demo.mmi.chart.GanttChart;
+import com.demo.openapi.service.RestAPIGateway;
 
 import javafx.application.Application;
 import javafx.scene.Scene;
 import javafx.scene.paint.Color;
 import javafx.stage.Stage;
 
-@SpringBootApplication
+@SpringBootApplication(scanBasePackages = { "com.demo.openapi" })
 public class GanttChartMain extends Application {
 
 	private ConfigurableApplicationContext context;
+
+	@Autowired
+	@Qualifier("restAPIGateway")
+	private RestAPIGateway restAPIGateway;
 
 	@Override
 	public void start(Stage var1) throws Exception {
@@ -26,7 +33,16 @@ public class GanttChartMain extends Application {
 		var1.show();
 
 		gc.getModel().getModelEventProperty().addListener((obj, oldVal, newVal) -> {
-			System.out.println(newVal);
+			if (newVal != null) {
+				switch (newVal.getModelEvent()) {
+					// case ADD -> System.out.println("Task added: " + newVal.toString());
+					// case REMOVE -> System.out.println("Task removed: " + newVal.toString());
+					case CHANGE -> {
+						restAPIGateway.send(newVal);
+					}
+					default -> System.out.println("Unknown event type: " + newVal.getModelEvent());
+				}
+			}
 		});
 
 		gc.getModel().addTaskGroup("zzom");
@@ -38,11 +54,13 @@ public class GanttChartMain extends Application {
 		gc.getModel().addTask("zzom duo", "Haha", Color.BLUE, ZonedDateTime.now(), ZonedDateTime.now().plusSeconds(30));
 
 		gc.getModel().addTask("zzom zz", "Hoho", Color.BLUE, ZonedDateTime.now(), ZonedDateTime.now().plusSeconds(30));
+
 	}
 
 	@Override
 	public void init() throws Exception {
-		context = SpringApplication.run(GanttChartMain.class);
+		context = new SpringApplicationBuilder(GanttChartMain.class).run();
+		restAPIGateway = context.getBean(RestAPIGateway.class);
 	}
 
 	@Override
