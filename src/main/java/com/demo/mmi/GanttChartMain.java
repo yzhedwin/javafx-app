@@ -25,9 +25,6 @@ public class GanttChartMain extends Application {
 	@Autowired
 	private RestAPIGateway restAPIGateway;
 
-	// modelEventProperty.set(new GanttChartModelEvent(EModelEvent.CHANGE, oldVal,
-	// newVal));
-
 	@Override
 	public void start(Stage var1) throws Exception {
 		GanttChart gc = new GanttChart(800, 400);
@@ -57,7 +54,6 @@ public class GanttChartMain extends Application {
 		gc.getModel().addTask("zzom duo", "Haha", Color.BLUE, ZonedDateTime.now(), ZonedDateTime.now().plusSeconds(30));
 
 		gc.getModel().addTask("zzom zz", "Hoho", Color.BLUE, ZonedDateTime.now(), ZonedDateTime.now().plusSeconds(30));
-
 	}
 
 	@Override

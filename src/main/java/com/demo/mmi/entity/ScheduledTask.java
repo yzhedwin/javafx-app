@@ -4,16 +4,18 @@ import java.time.Duration;
 import java.time.ZonedDateTime;
 
 import com.demo.mmi.util.GanttChartUtil;
+import com.demo.mmi.util.SerializableColor;
+import com.fasterxml.jackson.annotation.JsonCreator;
+import com.fasterxml.jackson.annotation.JsonProperty;
 
-import javafx.scene.paint.Color;
+import lombok.Builder;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
-import lombok.RequiredArgsConstructor;
 import lombok.Setter;
 
 @Getter
 @Setter
-@RequiredArgsConstructor
+@Builder
 @EqualsAndHashCode(onlyExplicitlyIncluded = true)
 public class ScheduledTask {
 	@EqualsAndHashCode.Include
@@ -22,7 +24,19 @@ public class ScheduledTask {
 	private String name;
 	private ZonedDateTime startTime;
 	private ZonedDateTime endTime;
-	private Color colour;
+	private SerializableColor colour;
+
+	@JsonCreator
+	public ScheduledTask(@JsonProperty("id") long id, @JsonProperty("groupName") String groupName,
+			@JsonProperty("name") String name, @JsonProperty("startTime") ZonedDateTime startTime,
+			@JsonProperty("endTime") ZonedDateTime endTime, @JsonProperty("colour") SerializableColor colour) {
+		this.id = id;
+		this.groupName = groupName;
+		this.name = name;
+		this.startTime = startTime;
+		this.endTime = endTime;
+		this.colour = colour;
+	}
 
 	/*
 	 * @return seconds between startTime and endTime
@@ -52,12 +66,14 @@ public class ScheduledTask {
 	}
 
 	public ScheduledTask duplicate() {
-		ScheduledTask st = new ScheduledTask(id);
-		st.setGroupName(groupName);
-		st.setName(name);
-		st.setColour(colour);
-		st.setStartTime(startTime);
-		st.setEndTime(endTime);
+		ScheduledTask st = ScheduledTask.builder()
+				.id(id)
+				.groupName(groupName)
+				.name(name)
+				.colour(colour)
+				.startTime(startTime)
+				.endTime(endTime)
+				.build();
 		return st;
 	}
 

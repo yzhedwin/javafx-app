@@ -65,7 +65,7 @@ public class ScheduledTaskBar extends Group {
 		double arc = height * 0.2;
 		bar = new Rectangle(0, 0, duration, height);
 		bar.fillProperty().bind(Bindings.createObjectBinding(() -> {
-			return bar.hoverProperty().get() ? task.getColour() : task.getColour().darker();
+			return bar.hoverProperty().get() ? task.getColour().toFXColor() : task.getColour().toFXColor().darker();
 		}, bar.hoverProperty()));
 		bar.setArcHeight(arc);
 		bar.setArcWidth(arc);

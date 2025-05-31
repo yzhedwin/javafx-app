@@ -5,6 +5,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 import com.demo.mmi.util.GanttChartUtil;
+import com.demo.mmi.util.SerializableColor;
 
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
@@ -31,11 +32,14 @@ public class ScheduledTaskGroup {
 
 	public ScheduledTask addTask(final String name, final Color colour, final ZonedDateTime start,
 			final ZonedDateTime end) {
-		ScheduledTask st = new ScheduledTask(GanttChartUtil.getNewTaskId());
-		st.setName(name);
-		st.setColour(colour);
-		st.setStartTime(start);
-		st.setEndTime(end);
+		ScheduledTask st = ScheduledTask.builder()
+				.id(GanttChartUtil.getNewTaskId())
+				.groupName(id)
+				.name(name)
+				.colour(new SerializableColor(colour))
+				.startTime(start)
+				.endTime(end)
+				.build();
 		addTask(st);
 		return st;
 	}
