@@ -14,14 +14,19 @@ import javafx.application.Application;
 import javafx.scene.Scene;
 import javafx.scene.paint.Color;
 import javafx.stage.Stage;
+import lombok.extern.slf4j.Slf4j;
 
-@SpringBootApplication(scanBasePackages = { "com.demo.openapi" })
+@Slf4j
+@SpringBootApplication(scanBasePackages = { "com.demo.openapi", "com.demo.mmi" })
 public class GanttChartMain extends Application {
 
 	private ConfigurableApplicationContext context;
 
 	@Autowired
 	private RestAPIGateway restAPIGateway;
+
+	// modelEventProperty.set(new GanttChartModelEvent(EModelEvent.CHANGE, oldVal,
+	// newVal));
 
 	@Override
 	public void start(Stage var1) throws Exception {
@@ -38,7 +43,7 @@ public class GanttChartMain extends Application {
 					case CHANGE -> {
 						restAPIGateway.send(newVal);
 					}
-					default -> System.out.println("Unknown event type: " + newVal.getModelEvent());
+					default -> log.debug("Unknown event type: " + newVal.getModelEvent());
 				}
 			}
 		});
