@@ -5,6 +5,12 @@ import lombok.Builder;
 import lombok.Getter;
 import lombok.Setter;
 
+/**
+ * Serializable representation of a Color object for JSON serialization.
+ * This class is used to store color values in a format that can be easily
+ * serialized and deserialized, particularly for use in WebSocket communication.
+ */
+
 @Setter
 @Getter
 @Builder

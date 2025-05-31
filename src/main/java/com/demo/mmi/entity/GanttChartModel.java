@@ -4,8 +4,6 @@ import java.time.ZonedDateTime;
 import java.util.ArrayList;
 import java.util.List;
 
-import org.springframework.context.annotation.Bean;
-
 import com.demo.mmi.util.GanttChartModelEvent;
 import com.demo.mmi.util.GanttChartUtil.EModelEvent;
 
@@ -125,8 +123,4 @@ public class GanttChartModel {
 		};
 	}
 
-	@Bean
-	ObjectProperty<GanttChartModelEvent> ganttChartModelEventProperty() {
-		return modelEventProperty;
-	}
 }

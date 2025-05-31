@@ -21,13 +21,13 @@ import lombok.extern.slf4j.Slf4j;
 public class GanttChartMain extends Application {
 
 	private ConfigurableApplicationContext context;
+	private final GanttChart gc = new GanttChart(800, 400);
 
 	@Autowired
 	private RestAPIGateway restAPIGateway;
 
 	@Override
 	public void start(Stage var1) throws Exception {
-		GanttChart gc = new GanttChart(800, 400);
 		Scene s = new Scene(gc);
 		var1.setScene(s);
 		var1.show();
@@ -51,14 +51,19 @@ public class GanttChartMain extends Application {
 
 		gc.getModel().addTask("zzom", "Hehe", Color.RED, ZonedDateTime.now(), ZonedDateTime.now().plusSeconds(25));
 
-		gc.getModel().addTask("zzom duo", "Haha", Color.BLUE, ZonedDateTime.now(), ZonedDateTime.now().plusSeconds(30));
+		gc.getModel().addTask("zzom duo", "Haha", Color.BLUE, ZonedDateTime.now(),
+				ZonedDateTime.now().plusSeconds(30));
 
-		gc.getModel().addTask("zzom zz", "Hoho", Color.BLUE, ZonedDateTime.now(), ZonedDateTime.now().plusSeconds(30));
+		gc.getModel().addTask("zzom zz", "Hoho", Color.BLUE, ZonedDateTime.now(),
+				ZonedDateTime.now().plusSeconds(30));
+
 	}
 
 	@Override
 	public void init() throws Exception {
-		context = new SpringApplicationBuilder(GanttChartMain.class).run();
+		context = new SpringApplicationBuilder(GanttChartMain.class)
+				.initializers(ctx -> ctx.getBeanFactory().registerSingleton("ganttChartModel", gc.getModel()))
+				.run();
 		restAPIGateway = context.getBean(RestAPIGateway.class);
 	}
 
