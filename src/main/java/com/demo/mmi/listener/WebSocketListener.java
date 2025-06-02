@@ -24,7 +24,7 @@ import lombok.extern.slf4j.Slf4j;
  */
 @Slf4j
 @Component
-@Profile({"client", "test"})
+@Profile({ "client", "test" })
 public class WebSocketListener {
 
     private final GanttChartModel ganttChartModel;
