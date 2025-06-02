@@ -2,6 +2,13 @@ spring:
   config:
     activate:
       on-profile: server
+      
+websocket: #Configure WebSocket connection to external service
+  protocol: ws
+  path: /test 
+  port: 8001
+  host: localhost
+  connectionTimeout: 5
 
 server:  #Own server configuration
   port: 8001
