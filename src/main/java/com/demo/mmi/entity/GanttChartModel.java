@@ -123,4 +123,21 @@ public class GanttChartModel {
 		};
 	}
 
+	public void updateTask(final ScheduledTask oldTask, final ScheduledTask newTask) {
+		synchronized (lock) {
+			ScheduledTaskGroup taskGroup = taskGroupMap.get(oldTask.getGroupName());
+			if (oldTask.getGroupName().compareTo(newTask.getGroupName()) == 0) { // Same group
+				taskGroup.updateTask(newTask);
+				System.out.println("Updating task in the same group: " + oldTask.getGroupName());
+				// modelEventProperty.set(new GanttChartModelEvent(EModelEvent.CHANGE, oldTask,
+				// newTask));
+				return;
+			}
+			// Different group, remove from old group and add to new group
+			taskGroup.removeTask(oldTask);
+			modelEventProperty.set(new GanttChartModelEvent(EModelEvent.REMOVE, oldTask, null));
+			taskGroupMap.get(newTask.getGroupName()).addTask(newTask);
+			modelEventProperty.set(new GanttChartModelEvent(EModelEvent.ADD, null, newTask));
+		}
+	}
 }

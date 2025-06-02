@@ -6,7 +6,6 @@ import org.springframework.context.event.EventListener;
 import org.springframework.stereotype.Component;
 
 import com.demo.mmi.entity.GanttChartModel;
-import com.demo.mmi.entity.ScheduledTask;
 import com.demo.mmi.util.GanttChartModelEvent;
 import com.demo.openapi.event.WebSocketEvent;
 import com.fasterxml.jackson.core.JsonProcessingException;
@@ -46,15 +45,8 @@ public class WebSocketListener {
 
             Platform.runLater(() -> {
                 // Update JavaFX properties on UI thread
-                // ganttChartModel.updateTask(ganttChartModelEvent.getOldTask(),
-                // ganttChartModelEvent.getNewTask());
-                ganttChartModel.removeTask(ganttChartModelEvent.getOldTask());
+                ganttChartModel.updateTask(ganttChartModelEvent.getOldTask(), ganttChartModelEvent.getNewTask());
 
-                ScheduledTask newtTask = ganttChartModelEvent.getNewTask();
-
-                // TODO: validate out of range rbg values
-                ganttChartModel.addTask(newtTask.getGroupName(), newtTask.getName(), newtTask.getColour().toFXColor(),
-                        newtTask.getStartTime(), newtTask.getEndTime());
             });
 
         } catch (JsonProcessingException e) {

@@ -62,4 +62,13 @@ public class ScheduledTaskGroup {
 			return new ArrayList<>(taskList);
 		}
 	}
+
+	public void updateTask(final ScheduledTask st) {
+		synchronized (lock) {
+			int index = taskList.indexOf(st);
+			if (index != -1) {
+				taskList.set(index, st);
+			}
+		}
+	}
 }
