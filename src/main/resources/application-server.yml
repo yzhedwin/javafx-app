@@ -1,0 +1,7 @@
+spring:
+  config:
+    activate:
+      on-profile: server
+
+server:  #Own server configuration
+  port: 8001

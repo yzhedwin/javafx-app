@@ -6,9 +6,12 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.boot.builder.SpringApplicationBuilder;
 import org.springframework.context.ConfigurableApplicationContext;
+import org.springframework.context.annotation.Import;
+import org.springframework.context.annotation.Profile;
 
 import com.demo.mmi.chart.GanttChart;
-import com.demo.openapi.service.RestAPIGateway;
+import com.demo.openapi.config.IntegrationConfig;
+import com.demo.openapi.gateway.GatewayInterface;
 
 import javafx.application.Application;
 import javafx.scene.Scene;
@@ -17,14 +20,16 @@ import javafx.stage.Stage;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
+@Profile("!test")
 @SpringBootApplication(scanBasePackages = { "com.demo.openapi", "com.demo.mmi" })
+@Import(IntegrationConfig.class)
 public class GanttChartMain extends Application {
 
 	private ConfigurableApplicationContext context;
 	private final GanttChart gc = new GanttChart(800, 400);
 
 	@Autowired
-	private RestAPIGateway restAPIGateway;
+	private GatewayInterface gateway;
 
 	@Override
 	public void start(Stage var1) throws Exception {
@@ -32,13 +37,14 @@ public class GanttChartMain extends Application {
 		var1.setScene(s);
 		var1.show();
 
+
 		gc.getModel().getModelEventProperty().addListener((obj, oldVal, newVal) -> {
 			if (newVal != null) {
 				switch (newVal.getModelEvent()) {
 					// case ADD -> System.out.println("Task added: " + newVal.toString());
 					// case REMOVE -> System.out.println("Task removed: " + newVal.toString());
 					case CHANGE -> {
-						restAPIGateway.send(newVal);
+						gateway.send(newVal);
 					}
 					default -> log.debug("Unknown event type: " + newVal.getModelEvent());
 				}
@@ -64,7 +70,7 @@ public class GanttChartMain extends Application {
 		context = new SpringApplicationBuilder(GanttChartMain.class)
 				.initializers(ctx -> ctx.getBeanFactory().registerSingleton("ganttChartModel", gc.getModel()))
 				.run();
-		restAPIGateway = context.getBean(RestAPIGateway.class);
+		gateway = context.getBean(GatewayInterface.class);
 	}
 
 	@Override

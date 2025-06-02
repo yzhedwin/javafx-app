@@ -1,0 +1,39 @@
+spring:
+  config:
+    activate:
+      on-profile: client
+  webclient:
+    baseUrl: http://localhost:8001 #External API base URL
+    endpointSchedule: /api/mmi/schedule #Endpoint for scheduling
+    max-in-memory-size: 1024KB
+    read-timeout: 10s
+    write-timeout: 10s
+    connect-timeout: 10s
+    # ssl:
+    #   trust-store: classpath:truststore.jks
+    #   trust-store-password: changeit
+    #   key-store: classpath:keystore.jks
+    #   key-store-password: changeit
+    # proxy:
+    #   host: proxy.example.com
+    #   port: 8080
+    #   username: myuser
+    #   password: mypass
+    # default-header:
+    #   Accept: application/json
+    #   Content-Type: application/json
+    # default-uri-variables:
+    #   variable1: value1
+    #   variable2: value2
+  main:
+      web-application-type: none
+      
+websocket: #Configure WebSocket connection to external service
+  protocol: ws
+  path: /test 
+  port: 8001
+  host: localhost
+  connectionTimeout: 5
+
+server:  #Own server configuration
+  port: 8081

@@ -1,11 +1,13 @@
-package com.demo.mmi.util;
+package com.demo.mmi.listener;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.annotation.Profile;
 import org.springframework.context.event.EventListener;
 import org.springframework.stereotype.Component;
 
 import com.demo.mmi.entity.GanttChartModel;
 import com.demo.mmi.entity.ScheduledTask;
+import com.demo.mmi.util.GanttChartModelEvent;
 import com.demo.openapi.event.WebSocketEvent;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -22,6 +24,7 @@ import lombok.extern.slf4j.Slf4j;
  */
 @Slf4j
 @Component
+@Profile({"client", "test"})
 public class WebSocketListener {
 
     private final GanttChartModel ganttChartModel;
@@ -46,16 +49,12 @@ public class WebSocketListener {
                 // ganttChartModel.updateTask(ganttChartModelEvent.getOldTask(),
                 // ganttChartModelEvent.getNewTask());
                 ganttChartModel.removeTask(ganttChartModelEvent.getOldTask());
+
                 ScheduledTask newtTask = ganttChartModelEvent.getNewTask();
 
                 // TODO: validate out of range rbg values
                 ganttChartModel.addTask(newtTask.getGroupName(), newtTask.getName(), newtTask.getColour().toFXColor(),
                         newtTask.getStartTime(), newtTask.getEndTime());
-
-                // ganttChartModel.getModelEventProperty().set(new
-                // GanttChartModelEvent(EModelEvent.CHANGE,
-                // ganttChartModelEvent.getOldTask(),
-                // ganttChartModelEvent.getNewTask()));
             });
 
         } catch (JsonProcessingException e) {
