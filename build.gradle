@@ -21,9 +21,7 @@ configurations {
 	}
 }
 
-repositories {
-	mavenCentral()
-}
+apply from: "$rootDir/repository.gradle"
 
 dependencies {
 	implementation 'org.springframework.boot:spring-boot-starter'
@@ -33,6 +31,7 @@ dependencies {
 	
 	implementation 'com.fasterxml.jackson.datatype:jackson-datatype-jsr310'
 	implementation project(":api")
+	implementation project(":common")
 	developmentOnly 'org.springframework.boot:spring-boot-devtools'
 	compileOnly 'org.projectlombok:lombok'
 	annotationProcessor 'org.projectlombok:lombok'

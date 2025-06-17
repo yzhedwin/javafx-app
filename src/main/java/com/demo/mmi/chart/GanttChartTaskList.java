@@ -4,9 +4,10 @@ import java.time.Duration;
 import java.time.ZonedDateTime;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.StringJoiner;
 
+import com.demo.common.model.ScheduledTask;
 import com.demo.mmi.entity.GanttChartModel;
-import com.demo.mmi.entity.ScheduledTask;
 import com.demo.mmi.entity.ScheduledTaskBar;
 import com.demo.mmi.entity.ScheduledTaskGroup;
 import com.demo.mmi.util.DateTimeStep;
@@ -17,6 +18,7 @@ import com.demo.mmi.util.ScheduledTaskRow;
 import javafx.beans.InvalidationListener;
 import javafx.beans.property.DoubleProperty;
 import javafx.beans.property.ObjectProperty;
+import javafx.beans.property.StringProperty;
 import javafx.beans.value.ChangeListener;
 import javafx.event.EventHandler;
 import javafx.scene.control.ScrollPane;
@@ -41,6 +43,7 @@ public class GanttChartTaskList extends ScrollPane {
 	private final ObjectProperty<DateTimeStep> stepProperty;
 	private final DoubleProperty pixelsPerTimeUnitProperty;
 	private final DoubleProperty guidingLineRatioProperty;
+	private final StringProperty informationProperty;
 
 	private final EventHandler<MouseEvent> mouseClickEvent;
 	private final List<ScheduledTaskBar> taskBarList = new ArrayList<>();
@@ -55,7 +58,7 @@ public class GanttChartTaskList extends ScrollPane {
 	public GanttChartTaskList(final GanttChartModel model, final ObjectProperty<ZonedDateTime> startTimeProperty,
 			final ObjectProperty<DateTimeStep> stepProperty, final DoubleProperty pixelsPerTimeUnitProperty,
 			final DoubleProperty guidingLineRatioProperty, final EventHandler<MouseEvent> mouseClickEvent,
-			final ChangeListener<ScheduledTask> taskChangeListener) {
+			final ChangeListener<ScheduledTask> taskChangeListener, final StringProperty informationProperty) {
 		this.model = model;
 		this.startTimeProperty = startTimeProperty;
 		this.stepProperty = stepProperty;
@@ -63,10 +66,23 @@ public class GanttChartTaskList extends ScrollPane {
 		this.guidingLineRatioProperty = guidingLineRatioProperty;
 		this.taskChangeListener = taskChangeListener;
 		this.mouseClickEvent = mouseClickEvent;
+		this.informationProperty = informationProperty;
 		setContent(content);
 		setFitToWidth(true);
+
 		content.getStyleClass().add(GanttChartUtil.CSS_TASK_LIST);
 		content.setOnMouseClicked(mouseClickEvent);
+		content.setOnMouseMoved(evt -> {
+			double x = evt.getSceneX() - content.localToScene(0, 0).getX();
+			double deltaTime = x / pixelsPerTimeUnitProperty.get();
+			DateTimeStep step = stepProperty.get();
+			ZonedDateTime zdt = step.getDateTimeWithOffset(startTimeProperty.get(), deltaTime);
+			String dt = GanttChartUtil.DATE_TIME_INFO_FORMATTER.format(zdt);
+			informationProperty.set(dt);
+		});
+		content.setOnMouseExited(evt -> {
+			informationProperty.set("");
+		});
 
 		startTimeProperty.addListener(refreshTaskListener);
 		stepProperty.addListener(refreshTaskListener);
@@ -137,12 +153,37 @@ public class GanttChartTaskList extends ScrollPane {
 
 	private IGanttChartRowChecker createRowChecker() {
 		return new IGanttChartRowChecker() {
+			@Override
+			public void onTaskEnter(ScheduledTaskBar taskBar) {
+				ScheduledTask task = taskBar.getTask();
+				informationProperty.set(createTaskInformation(task.getName(), task.getGroupName(), null,
+						task.getStartTime(), task.getEndTime()));
+			}
 
 			@Override
-			public void onTaskDrag(double x, double y) {
-				lastHoveredIndex = Double.valueOf(y / GanttChartUtil.TASK_HEIGHT).intValue();
+			public void onTaskExit(ScheduledTaskBar taskBar) {
+				informationProperty.set("");
+			}
+
+			@Override
+			public void onTaskDrag(ScheduledTaskBar taskBar, double centreY, double startTimeDelta,
+					double endTimeDelta) {
+				lastHoveredIndex = Double.valueOf(centreY / GanttChartUtil.TASK_HEIGHT).intValue();
 				indicator.setVisible(true);
 				indicator.setLayoutY(lastHoveredIndex * GanttChartUtil.TASK_HEIGHT);
+
+				ScheduledTask task = taskBar.getTask();
+				ScheduledTaskGroup newGroup = model.getTaskGroup(lastHoveredIndex);
+				String groupName = task.getGroupName();
+				String newGroupName = null;
+				if (newGroup != null && !groupName.equals(newGroup.getId())) {
+					newGroupName = newGroup.getId();
+				}
+
+				ZonedDateTime startTime = stepProperty.get().getDateTimeWithOffset(task.getStartTime(), startTimeDelta);
+				ZonedDateTime endTime = stepProperty.get().getDateTimeWithOffset(task.getEndTime(), endTimeDelta);
+				informationProperty.set(
+						createTaskInformation(task.getName(), task.getGroupName(), newGroupName, startTime, endTime));
 			}
 
 			@Override
@@ -156,7 +197,21 @@ public class GanttChartTaskList extends ScrollPane {
 					group.removeTask(task);
 					newGroup.addTask(task);
 				}
+				informationProperty.set("");
 			}
 		};
+	}
+
+	private String createTaskInformation(final String name, final String oldGroupName, final String newGroupName,
+			final ZonedDateTime startTime, final ZonedDateTime endTime) {
+		StringJoiner sj = new StringJoiner(" | ");
+		sj.add(name);
+		if (newGroupName != null) {
+			sj.add(oldGroupName + " --> " + newGroupName);
+		}
+		String startDt = GanttChartUtil.DATE_TIME_INFO_FORMATTER.format(startTime);
+		String endDt = GanttChartUtil.DATE_TIME_INFO_FORMATTER.format(endTime);
+		sj.add(startDt + " - " + endDt);
+		return sj.toString();
 	}
 }

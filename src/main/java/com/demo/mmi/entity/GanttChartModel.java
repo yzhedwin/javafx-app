@@ -4,8 +4,12 @@ import java.time.ZonedDateTime;
 import java.util.ArrayList;
 import java.util.List;
 
+import com.demo.common.model.ScheduledTask;
+import com.demo.common.model.SerializableColor;
 import com.demo.mmi.util.GanttChartModelEvent;
 import com.demo.mmi.util.GanttChartUtil.EModelEvent;
+import com.demo.mmi.util.GanttChartUtil.EModelEventSource;
+import com.demo.mmi.util.IGanttChartModelInternal;
 
 import javafx.beans.InvalidationListener;
 import javafx.beans.property.ObjectProperty;
@@ -16,7 +20,9 @@ import javafx.collections.ObservableList;
 import javafx.collections.ObservableMap;
 import javafx.scene.paint.Color;
 import lombok.Getter;
+import lombok.extern.slf4j.Slf4j;
 
+@Slf4j
 public class GanttChartModel {
 	@Getter
 	private final ObservableMap<String, ScheduledTaskGroup> taskGroupMap = FXCollections.observableHashMap();
@@ -48,8 +54,53 @@ public class GanttChartModel {
 			ScheduledTaskGroup taskGroup = taskGroupMap.get(groupId);
 			if (taskGroup != null) {
 				ScheduledTask st = taskGroup.addTask(name, colour, start, end);
-				modelEventProperty.set(new GanttChartModelEvent(EModelEvent.ADD, null, st));
+				modelEventProperty.set(new GanttChartModelEvent(EModelEventSource.EXTERNAL, EModelEvent.ADD, null, st));
 			}
+		}
+	}
+
+	private void updateTaskGroup(final ScheduledTaskGroup taskGroup, final List<ScheduledTask> list,
+			final String groupId,
+			final String name,
+			final Color colour, final ZonedDateTime start,
+			final ZonedDateTime end) {
+		synchronized (lock) {
+			for (ScheduledTask st : list) {
+				ScheduledTask oldSt = st.duplicate();
+				st.setName(name);
+				st.setColour(new SerializableColor(colour));
+				st.setStartTime(start);
+				st.setEndTime(end);
+				taskGroup.addTask(st);
+				modelEventProperty
+						.set(new GanttChartModelEvent(EModelEventSource.EXTERNAL, EModelEvent.CHANGE, oldSt, st));
+			}
+		}
+	}
+
+	/*
+	 * Edited for compatibility with SimpleAssetMission model
+	 * Insufficient fields to handle groups
+	 */
+	public void updateTask(final ScheduledTask oldTask, final ScheduledTask newTask) {
+		synchronized (lock) {
+			ScheduledTaskGroup taskGroup = taskGroupMap.get(oldTask.getGroupName());
+			// if (oldTask.getGroupName().compareTo(newTask.getGroupName()) == 0) { // Same
+			// group
+			List<ScheduledTask> list = taskGroup.removeTask(oldTask.getName());
+			updateTaskGroup(taskGroup, list, oldTask.getGroupName(), newTask.getName(),
+					oldTask.getColour().toFXColor(),
+					newTask.getStartTime(), newTask.getEndTime());
+			log.debug("Updating task in the same group: " + oldTask.getGroupName());
+			return;
+			// }
+			// Different group, remove from old group and add to new group
+			// List<ScheduledTask> list = taskGroup.removeTask(oldTask.getName());
+			// taskGroup = taskGroupMap.get(newTask.getGroupName());
+			// updateTaskGroup(taskGroup, list, newTask.getGroupName(), newTask.getName(),
+			// newTask.getColour().toFXColor(),
+			// newTask.getStartTime(), newTask.getEndTime());
+			// log.debug("Updating task in the different group: " + oldTask.getGroupName());
 		}
 	}
 
@@ -63,18 +114,23 @@ public class GanttChartModel {
 				List<ScheduledTask> list = group.getTasks();
 				int sz = list.size();
 				for (int i = 0; i < sz; i++) {
-					modelEventProperty.set(new GanttChartModelEvent(EModelEvent.REMOVE, list.get(i), null));
+					modelEventProperty.set(new GanttChartModelEvent(EModelEventSource.EXTERNAL, EModelEvent.REMOVE,
+							list.get(i), null));
 				}
 			}
 		}
 	}
 
-	public void removeTask(final ScheduledTask st) {
+	public void removeTask(final String groupId, final String name) {
 		synchronized (lock) {
-			ScheduledTaskGroup taskGroup = taskGroupMap.get(st.getGroupName());
+			ScheduledTaskGroup taskGroup = taskGroupMap.get(groupId);
 			if (taskGroup != null) {
-				taskGroup.removeTask(st);
-				modelEventProperty.set(new GanttChartModelEvent(EModelEvent.REMOVE, st, null));
+				List<ScheduledTask> list = taskGroup.removeTask(name);
+				int sz = list.size();
+				for (int i = 0; i < sz; i++) {
+					modelEventProperty.set(new GanttChartModelEvent(EModelEventSource.EXTERNAL, EModelEvent.REMOVE,
+							list.get(i), null));
+				}
 			}
 		}
 	}
@@ -119,25 +175,37 @@ public class GanttChartModel {
 
 	private ChangeListener<ScheduledTask> createTaskChangeListener() {
 		return (obj, oldVal, newVal) -> {
-			modelEventProperty.set(new GanttChartModelEvent(EModelEvent.CHANGE, oldVal, newVal));
+			modelEventProperty
+					.set(new GanttChartModelEvent(EModelEventSource.INTERNAL, EModelEvent.CHANGE, oldVal, newVal));
 		};
 	}
 
-	public void updateTask(final ScheduledTask oldTask, final ScheduledTask newTask) {
-		synchronized (lock) {
-			ScheduledTaskGroup taskGroup = taskGroupMap.get(oldTask.getGroupName());
-			if (oldTask.getGroupName().compareTo(newTask.getGroupName()) == 0) { // Same group
-				taskGroup.updateTask(newTask);
-				System.out.println("Updating task in the same group: " + oldTask.getGroupName());
-				// modelEventProperty.set(new GanttChartModelEvent(EModelEvent.CHANGE, oldTask,
-				// newTask));
-				return;
+	public IGanttChartModelInternal createModelInternal() {
+		return new IGanttChartModelInternal() {
+
+			@Override
+			public void addTask(String groupId, ZonedDateTime start, ZonedDateTime end) {
+				synchronized (lock) {
+					ScheduledTaskGroup taskGroup = taskGroupMap.get(groupId);
+					if (taskGroup != null) {
+						ScheduledTask st = taskGroup.addTask(start, end);
+						modelEventProperty
+								.set(new GanttChartModelEvent(EModelEventSource.INTERNAL, EModelEvent.ADD, null, st));
+					}
+				}
 			}
-			// Different group, remove from old group and add to new group
-			taskGroup.removeTask(oldTask);
-			modelEventProperty.set(new GanttChartModelEvent(EModelEvent.REMOVE, oldTask, null));
-			taskGroupMap.get(newTask.getGroupName()).addTask(newTask);
-			modelEventProperty.set(new GanttChartModelEvent(EModelEvent.ADD, null, newTask));
-		}
+
+			@Override
+			public void removeTask(ScheduledTask task) {
+				synchronized (lock) {
+					ScheduledTaskGroup taskGroup = taskGroupMap.get(task.getGroupName());
+					if (taskGroup != null) {
+						taskGroup.removeTask(task);
+						modelEventProperty.set(
+								new GanttChartModelEvent(EModelEventSource.INTERNAL, EModelEvent.REMOVE, task, null));
+					}
+				}
+			}
+		};
 	}
 }

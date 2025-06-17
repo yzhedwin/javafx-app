@@ -3,7 +3,11 @@ package com.demo.mmi.util;
 import com.demo.mmi.entity.ScheduledTaskBar;
 
 public interface IGanttChartRowChecker {
-    void onTaskDrag(double x, double y);
+	void onTaskEnter(ScheduledTaskBar taskBar);
 
-    void onTaskDragEnd(ScheduledTaskBar taskBar);
+	void onTaskExit(ScheduledTaskBar taskBar);
+
+	void onTaskDrag(ScheduledTaskBar taskBar, double centreY, double startTimeDelta, double endTimeDelta);
+
+	void onTaskDragEnd(ScheduledTaskBar taskBar);
 }

@@ -15,7 +15,7 @@ import javafx.scene.layout.Pane;
 import javafx.scene.layout.VBox;
 
 public class GanttChartTaskGroupList extends VBox {
-    private final Pane dataPane = new Pane();
+	private final Pane dataPane = new Pane();
     private final Map<String, Label> groupLabelMap = new HashMap<>();
 
     public GanttChartTaskGroupList(final GanttChartModel model,

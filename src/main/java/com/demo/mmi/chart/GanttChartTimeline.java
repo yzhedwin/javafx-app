@@ -15,7 +15,7 @@ import javafx.scene.control.Label;
 import javafx.scene.layout.HBox;
 
 public class GanttChartTimeline extends HBox {
-    private final InvalidationListener refreshTimelineListener = evt -> {
+	private final InvalidationListener refreshTimelineListener = evt -> {
         updateScale();
     };
     private final ObjectProperty<ZonedDateTime> startTimeProperty;

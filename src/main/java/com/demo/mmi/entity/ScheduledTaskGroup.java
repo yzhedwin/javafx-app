@@ -2,10 +2,12 @@ package com.demo.mmi.entity;
 
 import java.time.ZonedDateTime;
 import java.util.ArrayList;
+import java.util.Iterator;
 import java.util.List;
 
+import com.demo.common.model.ScheduledTask;
+import com.demo.common.model.SerializableColor;
 import com.demo.mmi.util.GanttChartUtil;
-import com.demo.mmi.util.SerializableColor;
 
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
@@ -15,7 +17,6 @@ import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 
 @RequiredArgsConstructor
-
 @EqualsAndHashCode(onlyExplicitlyIncluded = true)
 public class ScheduledTaskGroup {
 	private final Object lock = new Object();
@@ -34,7 +35,6 @@ public class ScheduledTaskGroup {
 			final ZonedDateTime end) {
 		ScheduledTask st = ScheduledTask.builder()
 				.id(GanttChartUtil.getNewTaskId())
-				.groupName(id)
 				.name(name)
 				.colour(new SerializableColor(colour))
 				.startTime(start)
@@ -57,18 +57,29 @@ public class ScheduledTaskGroup {
 		}
 	}
 
-	public List<ScheduledTask> getTasks() {
+	/**
+	 * Removes ALL elements of name
+	 * 
+	 * @param name
+	 */
+	public List<ScheduledTask> removeTask(final String name) {
+		List<ScheduledTask> list = new ArrayList<>();
 		synchronized (lock) {
-			return new ArrayList<>(taskList);
+			Iterator<ScheduledTask> it = taskList.iterator();
+			while (it.hasNext()) {
+				ScheduledTask st = it.next();
+				if (name.equals(st.getName())) {
+					list.add(st);
+					it.remove();
+				}
+			}
+			return list;
 		}
 	}
 
-	public void updateTask(final ScheduledTask st) {
+	public List<ScheduledTask> getTasks() {
 		synchronized (lock) {
-			int index = taskList.indexOf(st);
-			if (index != -1) {
-				taskList.set(index, st);
-			}
+			return new ArrayList<>(taskList);
 		}
 	}
 }

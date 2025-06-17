@@ -1,6 +1,9 @@
 package com.demo.mmi;
 
-import java.time.ZonedDateTime;
+import java.time.Instant;
+import java.time.ZoneId;
+import java.util.Arrays;
+import java.util.List;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
@@ -8,7 +11,9 @@ import org.springframework.boot.builder.SpringApplicationBuilder;
 import org.springframework.context.ConfigurableApplicationContext;
 import org.springframework.context.annotation.Import;
 import org.springframework.context.annotation.Profile;
+import org.springframework.core.env.Environment;
 
+import com.demo.common.model.SimpleAssetMission;
 import com.demo.mmi.chart.GanttChart;
 import com.demo.openapi.config.IntegrationConfig;
 import com.demo.openapi.gateway.GatewayInterface;
@@ -31,37 +36,52 @@ public class GanttChartMain extends Application {
 	@Autowired
 	private GatewayInterface gateway;
 
+	@Autowired
+	Environment env;
+
 	@Override
 	public void start(Stage var1) throws Exception {
 		Scene s = new Scene(gc);
 		var1.setScene(s);
 		var1.show();
 
-
 		gc.getModel().getModelEventProperty().addListener((obj, oldVal, newVal) -> {
 			if (newVal != null) {
-				switch (newVal.getModelEvent()) {
-					// case ADD -> System.out.println("Task added: " + newVal.toString());
-					// case REMOVE -> System.out.println("Task removed: " + newVal.toString());
-					case CHANGE -> {
-						gateway.send(newVal);
+				switch (newVal.getEventSource()) {
+					case INTERNAL -> {
+						// For testing
+						if (Arrays.toString(env.getActiveProfiles()).contains("server")) {
+							gateway.send(newVal.getNewTask());
+						} else {
+							newVal.processInternalModelEvent(gateway);
+						}
 					}
+					case EXTERNAL -> log.debug("External event: " + newVal.getModelEvent());
 					default -> log.debug("Unknown event type: " + newVal.getModelEvent());
 				}
 			}
 		});
-
 		gc.getModel().addTaskGroup("zzom");
 		gc.getModel().addTaskGroup("zzom duo");
 		gc.getModel().addTaskGroup("zzom zz");
 
-		gc.getModel().addTask("zzom", "Hehe", Color.RED, ZonedDateTime.now(), ZonedDateTime.now().plusSeconds(25));
+		// fetch list of mission task from endpoint
+		List<SimpleAssetMission> missionList = gateway.receive();
 
-		gc.getModel().addTask("zzom duo", "Haha", Color.BLUE, ZonedDateTime.now(),
-				ZonedDateTime.now().plusSeconds(30));
+		for (SimpleAssetMission mission : missionList) {
+			gc.getModel().addTask("zzom", mission.getTitle(), Color.color(Math.random(),
+					Math.random(), Math.random()),
+					Instant.ofEpochMilli(mission.getAbsoluteStartTimeEpochMs()).atZone(ZoneId.systemDefault()),
+					Instant.ofEpochMilli(mission.getAbsoluteStartTimeEpochMs() +
+							mission.getDurationMs())
+							.atZone(ZoneId.systemDefault()));
+		}
 
-		gc.getModel().addTask("zzom zz", "Hoho", Color.BLUE, ZonedDateTime.now(),
-				ZonedDateTime.now().plusSeconds(30));
+		// gc.getModel().addTask("zzom duo", "Haha", Color.BLUE, ZonedDateTime.now(),
+		// ZonedDateTime.now().plusSeconds(30));
+
+		// gc.getModel().addTask("zzom zz", "Hoho", Color.BLUE, ZonedDateTime.now(),
+		// ZonedDateTime.now().plusSeconds(30));
 
 	}
 
@@ -71,6 +91,7 @@ public class GanttChartMain extends Application {
 				.initializers(ctx -> ctx.getBeanFactory().registerSingleton("ganttChartModel", gc.getModel()))
 				.run();
 		gateway = context.getBean(GatewayInterface.class);
+		env = context.getBean(Environment.class);
 	}
 
 	@Override

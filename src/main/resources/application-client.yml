@@ -3,8 +3,8 @@ spring:
     activate:
       on-profile: client
   webclient:
-    baseUrl: http://localhost:8001 #External API base URL
-    endpointSchedule: /api/mmi/schedule #Endpoint for scheduling
+    baseUrl: http://localhost:58082 #External API base URL
+    endpointSchedule: /api/v1/sandbox/asset-missions #Endpoint for scheduling
     max-in-memory-size: 1024KB
     read-timeout: 10s
     write-timeout: 10s
@@ -34,6 +34,11 @@ websocket: #Configure WebSocket connection to external service
   port: 8001
   host: localhost
   connectionTimeout: 5
+  isEnabled: false
 
 server:  #Own server configuration
   port: 8081
+
+logging:
+  level:
+    org.springframework.integration: OFF

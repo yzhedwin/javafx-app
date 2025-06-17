@@ -3,6 +3,8 @@ package com.demo.mmi.util;
 import java.time.format.DateTimeFormatter;
 import java.util.concurrent.TimeUnit;
 
+import com.demo.mmi.util.DateTimeUtil.EDateTimeFormat;
+
 import javafx.geometry.Insets;
 import javafx.scene.layout.Border;
 import javafx.scene.layout.BorderStroke;
@@ -12,6 +14,10 @@ import javafx.scene.layout.CornerRadii;
 import javafx.scene.paint.Color;
 
 public final class GanttChartUtil {
+	public enum EModelEventSource {
+		INTERNAL, EXTERNAL
+	}
+
 	public enum EModelEvent {
 		ADD, CHANGE, REMOVE
 	}
@@ -56,7 +62,8 @@ public final class GanttChartUtil {
 	public static final double GUIDER_HEIGHT = 20; // in pixels. TODO change to ratio
 	public static final double GUIDER_WIDTH = GUIDER_HEIGHT * 1.61805;
 	public static final Color GUIDER_COLOUR = EColourUtil.AMBER_50.getColour();
-	public static final DateTimeFormatter DATE_TIME_FORMATTER = DateTimeFormatter.ofPattern("EEEE\ndd-MM-YY\nHH:mm:ss");
+	public static final DateTimeFormatter DATE_TIME_FORMATTER = EDateTimeFormat.WEEKDAY_COMPRESSED.getFormatter();
+	public static final DateTimeFormatter DATE_TIME_INFO_FORMATTER = EDateTimeFormat.WEEKDAY.getFormatter();
 	public static final Insets TIMELINE_PADDING = new Insets(5, 5, 5, 5);
 	public static final Border TIMELINE_UNIT_BORDER = new Border(
 			new BorderStroke(Color.BLACK, BorderStrokeStyle.SOLID, CornerRadii.EMPTY, new BorderWidths(0, 1, 0, 1)));

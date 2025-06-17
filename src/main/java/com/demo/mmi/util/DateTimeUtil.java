@@ -25,7 +25,8 @@ public final class DateTimeUtil {
         DATE_ONLY("dd MMM yyyy"),
         TIME_ONLY("HH:mm:ss"),
         NO_YEAR("dd MMM HH:mm"),
-        WEEKDAY_COMPRESSED("EEEE\ndd-MM-YY\nHH:mm:ss");
+        WEEKDAY_COMPRESSED("EEEE\ndd-MM-YY\nHH:mm:ss"),
+        WEEKDAY("EEEE dd-MM-YY HH:mm:ss");
 
         private DateTimeFormatter formatter;
 

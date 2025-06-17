@@ -2,6 +2,7 @@ package com.demo.mmi.entity;
 
 import java.util.Objects;
 
+import com.demo.common.model.ScheduledTask;
 import com.demo.mmi.util.DateTimeStep;
 import com.demo.mmi.util.GanttChartUtil;
 import com.demo.mmi.util.GanttChartUtil.EColourUtil;
@@ -43,9 +44,8 @@ public class ScheduledTaskBar extends Group {
 
 	// Resize
 	private EResizeDirection direction = EResizeDirection.NIL;
-	private double originalStartX = -1;
-	private double originalEndX = -1;
-	private double originalStartY = -1;
+	private double startTimeDelta = 0;
+	private double endTimeDelta = 0;
 
 	public ScheduledTaskBar(final ScheduledTask task, final ObjectProperty<DateTimeStep> stepProperty,
 			final double pixelPerTimeUnit, final IGanttChartRowChecker rowChecker,
@@ -86,20 +86,22 @@ public class ScheduledTaskBar extends Group {
 
 		// To ensure only 1 click event is fired
 		// Tested: Label blocks all except click events
-		label.addEventHandler(MouseEvent.ANY, evt -> {
-			if (evt.getEventType() != MouseEvent.MOUSE_CLICKED) {
-				bar.fireEvent(evt);
-			}
-		});
+		label.setMouseTransparent(true);
 	}
 
 	private void addMouseEvents() {
+		bar.setOnMouseEntered(evt -> {
+			rowChecker.onTaskEnter(this);
+		});
+
 		bar.setOnMouseMoved(evt -> {
 			direction = getResizeDirection(evt);
+			evt.consume();
 		});
 
 		bar.setOnMouseExited(evt -> {
 			getScene().setCursor(Cursor.DEFAULT);
+			rowChecker.onTaskExit(this);
 		});
 
 		bar.setOnMousePressed(pressedEvt -> {
@@ -112,22 +114,26 @@ public class ScheduledTaskBar extends Group {
 			double pressedY = pressedEvt.getSceneY();
 			double refWidth = bar.getLayoutBounds().getWidth();
 			double refHeight = bar.getLayoutBounds().getHeight();
-			originalStartX = getLayoutX();
-			originalStartY = getLayoutY();
-			originalEndX = originalStartX + getLayoutBounds().getWidth();
+			double originalStartX = getLayoutX();
+			double originalStartY = getLayoutY();
+			double originalEndX = originalStartX + getLayoutBounds().getWidth();
 			bar.setOnMouseDragged(draggedEvt -> {
 				double deltaX = draggedEvt.getSceneX() - pressedX;
+				double x = originalStartX + draggedEvt.getSceneX() - pressedX;
+				double y = originalStartY + draggedEvt.getSceneY() - pressedY;
 				switch (direction) {
 					case EAST:
 						bar.setWidth(refWidth + deltaX);
+						startTimeDelta = 0;
+						endTimeDelta = deltaX / pixelPerTimeUnit;
 						break;
 					case WEST:
 						setLayoutX(originalStartX + deltaX);
 						bar.setWidth(refWidth - deltaX);
+						startTimeDelta = deltaX / pixelPerTimeUnit;
+						endTimeDelta = 0;
 						break;
 					case NIL:
-						double x = originalStartX + draggedEvt.getSceneX() - pressedX;
-						double y = originalStartY + draggedEvt.getSceneY() - pressedY;
 						Parent p = getParent();
 						if (p != null) {
 							Bounds b = p.getLayoutBounds();
@@ -139,13 +145,16 @@ public class ScheduledTaskBar extends Group {
 								}
 							}
 						}
+						startTimeDelta = (x - originalStartX) / pixelPerTimeUnit;
+						endTimeDelta = (x + refWidth - originalEndX) / pixelPerTimeUnit;
 						setLayoutX(x);
 						setLayoutY(y);
-						rowChecker.onTaskDrag(x + refWidth / 2, y + refHeight / 2);
 						break;
 					default:
 						break;
 				}
+
+				rowChecker.onTaskDrag(this, y + refHeight / 2, startTimeDelta, endTimeDelta);
 			});
 		});
 
@@ -155,10 +164,6 @@ public class ScheduledTaskBar extends Group {
 				return;
 			}
 
-			double currentStartX = getLayoutX();
-			double currentEndX = currentStartX + getLayoutBounds().getWidth();
-			double startTimeDelta = (currentStartX - originalStartX) / pixelPerTimeUnit;
-			double endTimeDelta = (currentEndX - originalEndX) / pixelPerTimeUnit;
 			DateTimeStep step = stepProperty.get();
 			ScheduledTask oldTask = task.duplicate();
 			task.setStartTime(step.getDateTimeWithOffset(task.getStartTime(), startTimeDelta));
